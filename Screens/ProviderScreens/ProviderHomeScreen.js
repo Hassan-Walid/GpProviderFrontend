@@ -13,13 +13,12 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import ConsumerCard from "../../components/ProviderComponents/ConsumerCard";
 import SwitchStatus from "./../../components/ProviderComponents/SwitchStatus";
-import RequestScreen from "./RequestScreen";
 import { ProgressBar } from "react-native-paper";
 import io from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
+const ProviderHomeScreen = ({  }) => {
 
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
@@ -28,20 +27,6 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     longitudeDelta: 0.0421,
   });
 
-  // const [mapRegion2, setMapRegion2] = useState({
-  //   latitude: 37.78825,
-  //   longitude: -122.4324,
-  //   latitudeDelta: 0.0922,
-  //   longitudeDelta: 0.0421,
-  // });
-
-  // const [consumers, setConsumers] = useState([
-  //   { id: "1", name: "Provider 1", distance: "2 km", carType: "Sedan" },
-  //   { id: "2", name: "Provider 2", distance: "5 km", carType: "SUV" },
-  //   { id: "3", name: "Provider 3", distance: "3 km", carType: "Sedan" },
-  //   { id: "4", name: "Provider 4", distance: "7 km", carType: "SUV" },
-  // ]);
-
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [socket, setSocket] = useState(null);
   const [id, setId] = useState(null);
@@ -49,7 +34,8 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [isRequestAccepted, setIsRequestAccepted] = useState(false);
   const [requestInfo, setRequestInfo] = useState({});
-
+  const [trackFlag, setTrackFlag] = useState(false);
+  const [startPickUp, setStartPickUp] = useState(false);
   let intervalRef = useRef(null);
   let mapRef = useRef(null);
 
@@ -72,18 +58,38 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     if (isRequestAccepted) {
       intervalRef.current = setInterval(() => {
         console.log("tracked");
-        
+
         userLocation();
         let { latitude, longitude } = mapRegion;
-        let { consumerId, consumerLocation } = requestInfo;
-        socket.emit("Tracked", { userId: id, targetId: consumerId, targetLocation: consumerLocation, location: { latitude, longitude } })
+
+        if (trackFlag) {
+
+          let { consumerId, consumerLocation, targetLocation } = requestInfo;
+          let target = consumerLocation;
+
+          if (startPickUp) {
+            target = targetLocation;
+          }
+          socket.emit("PickUpTracking", {
+            userId: providerId,
+            targetId: consumerId,
+            targetLocation: target,
+            providerLiveLocation: { latitude, longitude },
+            startPickUp
+          })
+
+        } else {
+
+          let { consumerId, consumerLocation } = requestInfo;
+          socket.emit("Tracked", { userId: id, targetId: consumerId, targetLocation: consumerLocation, location: { latitude, longitude } })
+        }
       }, 3000)
     }
 
     return () => {
       clearInterval(intervalRef.current);
     }
-  }, [isRequestAccepted])
+  }, [isRequestAccepted, mapRegion])
 
   useEffect(() => {
     if (isSwitchOn) {
@@ -123,6 +129,41 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 
       })
 
+      newsocket.on('IncomingPickUpRequest', async ({ consumerId, consumerLocation, distance, targetLocation }) => {
+
+        console.log("Incoming PickUp Request from " + consumerId + " at lat: " + consumerLocation + " distance: " + distance);
+
+        let incomingUser = await axios.get(`http://192.168.1.10:8000/api/user/${consumerId}`)
+          .then(res => {
+            return res.data.user;
+          })
+          .catch((e) => {
+            console.log(e);
+          })
+
+        setPendingRequests((allRequests) => [...allRequests, { consumerId, consumerLocation, distance, incomingUser, targetLocation }]);
+        setTrackFlag(true);
+      })
+
+      newsocket.on('StartPickUp', () => {
+        setStartPickUp(true);
+      })
+
+      newsocket.on("PickUpFinished", () => {
+        clearInterval(intervalRef.current);
+        setIsRequestAccepted(false);
+        setTrackFlag(false);
+        setRequestInfo({});
+        setPendingRequests([]);
+      })
+
+      newsocket.on("HasArrived", () => {
+        clearInterval(intervalRef.current);
+        setIsRequestAccepted(false);
+        setRequestInfo({});
+        setPendingRequests([]);
+      })
+
       setSocket(newsocket);
 
     } else {
@@ -155,19 +196,14 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
   };
 
 
-  const [isOpened, setIsOpened] = useState(false);
-
-
-  const origin = { latitude: 37.78825, longitude: -122.4324 };
-  const destination = { latitude: 40.79855, longitude: -100.4324 };
-  const region = {
-    latitude: 37.78825,
-    longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  };
-
-
+  // const origin = { latitude: 37.78825, longitude: -122.4324 };
+  // const destination = { latitude: 40.79855, longitude: -100.4324 };
+  // const region = {
+  //   latitude: 37.78825,
+  //   longitude: -122.4324,
+  //   latitudeDelta: 0.0922,
+  //   longitudeDelta: 0.0421,
+  // };
 
   return (
     <>
@@ -182,7 +218,7 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
           followsUserLocation={true}
           ref={mapRef}
           region={mapRegion}
-          
+
         >
           <Marker coordinate={mapRegion} title="You"></Marker>
 

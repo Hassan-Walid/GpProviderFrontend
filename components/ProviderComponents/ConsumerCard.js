@@ -1,16 +1,42 @@
 import * as React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Linking } from "react-native";
 import { Avatar, Button, Card, Text } from "react-native-paper";
 import CustomButton from "../CustomButton";
 
 const LeftContent = (props) => <Avatar.Icon {...props} icon="account" />;
 
-const ConsumerCard = ({ name, distance, carType, consumerId, consumerLocation,  setIsRequestAccepted, setRequestInfo, setPendingRequests }) => {
-  
+const ConsumerCard = ({ map, name, distance, carType, consumerId, consumerLocation, setIsRequestAccepted, setRequestInfo, setPendingRequests }) => {
+
+  let [showNavigateButton, setShowNavigateButton] = React.useState(false);
+
   let handleAccept = () => {
     setIsRequestAccepted(true);
-    setPendingRequests([]);
-    setRequestInfo({consumerId, consumerLocation})
+    setPendingRequests((old) => {
+      return old.filter((r) => {
+        return r["consumerId"] === consumerId;
+      })
+    });
+
+    setShowNavigateButton(true);
+    setRequestInfo({ consumerId, consumerLocation })
+  }
+
+  let handleLink = () => {
+    console.log(consumerLocation);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${consumerLocation.latitude},${consumerLocation.longitude}`;
+    Linking.openURL(url);
+  }
+
+  let focusOnMarker = () => {
+    let latitude = +consumerLocation["latitude"];
+    let longitude = +consumerLocation["longitude"];
+
+    map.current.animateToRegion({
+      latitude,
+      longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    }, 1000)
   }
 
   return (
@@ -34,19 +60,44 @@ const ConsumerCard = ({ name, distance, carType, consumerId, consumerLocation,  
         </Card.Content>
         <Card.Actions style={styles.actions}>
           <View style={styles.button}>
-            <View style={{ width: "40%" }}>
-              <CustomButton
-                title={"Accept"}
-                onPressHandler={handleAccept}
-              ></CustomButton>
-            </View>
-            <View style={{ width: "40%" }}>
-              <CustomButton
-                title={"Skip"}
-                onPressHandler={() => { }}
-              ></CustomButton>
-            </View>
+
+            {!showNavigateButton ? (
+              <>
+                <View style={{ width: "33%" }}>
+                  <CustomButton
+                    title={"Accept"}
+                    onPressHandler={handleAccept}
+                  ></CustomButton>
+                </View>
+
+                <View style={{ width: "33%" }}>
+                  <CustomButton
+                    title={"Skip"}
+                    onPressHandler={() => { }}
+                  ></CustomButton>
+                </View>
+
+                <View style={{ width: "33%" }}>
+                  <CustomButton
+                    title={"Get Marker"}
+                    onPressHandler={focusOnMarker}
+                  ></CustomButton>
+                </View>
+              </>
+            ) : (
+              <View style={{ width: "50%" }}>
+                <CustomButton
+                  title={"Get Location"}
+                  onPressHandler={handleLink}
+                ></CustomButton>
+              </View>
+            )}
+
+
+
+
           </View>
+          {/* <Button title="Get Location" onPress={handleLink}></Button> */}
         </Card.Actions>
       </Card>
     </View>
@@ -60,6 +111,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
+    // flexDirection: 'column',
     borderRadius: 8,
     elevation: 4,
   },
@@ -91,7 +143,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     // justifyContent: "flex-end",
-    padding: 2,
+    // padding: 2,
   },
   button: {
     flexDirection: "row",

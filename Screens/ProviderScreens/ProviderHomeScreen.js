@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Text,
   View,
+  Linking,
+  ScrollView
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -49,6 +51,7 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
   const [requestInfo, setRequestInfo] = useState({});
 
   let intervalRef = useRef(null);
+  let mapRef = useRef(null);
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((data) => {
@@ -69,9 +72,10 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     if (isRequestAccepted) {
       intervalRef.current = setInterval(() => {
         console.log("tracked");
+        
+        userLocation();
         let { latitude, longitude } = mapRegion;
         let { consumerId, consumerLocation } = requestInfo;
-        userLocation();
         socket.emit("Tracked", { userId: id, targetId: consumerId, targetLocation: consumerLocation, location: { latitude, longitude } })
       }, 3000)
     }
@@ -130,6 +134,7 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     }
   }, [isSwitchOn]);
 
+
   const userLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
 
@@ -152,19 +157,9 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 
   const [isOpened, setIsOpened] = useState(false);
 
-  const handleSwitchChange = (enabled) => {
-    // console.log(enabled);
-    setIsOpened(enabled);
-    if (enabled) {
-      // socket.connect("http://192.168.1.5:8000/");
-    } else {
-      // socket.disconnect();
-    }
-  };
-
 
   const origin = { latitude: 37.78825, longitude: -122.4324 };
-  const destination = { latitude: 37.79855, longitude: -122.4324 };
+  const destination = { latitude: 40.79855, longitude: -100.4324 };
   const region = {
     latitude: 37.78825,
     longitude: -122.4324,
@@ -172,30 +167,45 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     longitudeDelta: 0.0421,
   };
 
+
+
   return (
     <>
+      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <SwitchStatus isSwitchOn={isSwitchOn} setIsSwitchOn={setIsSwitchOn} />
+      </View>
+
       <View style={styles.mapContainer}>
         <MapView
           style={styles.map}
-          region={origin}
-        // initialRegion={region}
+          showsUserLocation={true}
+          followsUserLocation={true}
+          ref={mapRef}
+          region={mapRegion}
+          
         >
-          <Marker coordinate={origin} title="Consumer place"></Marker>
-          {/* <Marker coordinate={origin} title="Origin" />
-          {/* Show marker for destination */}
-          {/* <Marker coordinate={destination} title="Destination"></Marker>  */}
+          <Marker coordinate={mapRegion} title="You"></Marker>
 
-          {/* <Polyline
-            coordinates={[origin, destination]}
-            strokeColor="#FF0000"
-            strokeWidth={3}
-          /> */}
+          {pendingRequests.map((r, i) => {
+            let coordinate = r["consumerLocation"];
+            let lat = +coordinate["latitude"];
+            let long = +coordinate["longitude"];
+
+            return (
+              // <></>
+              <Marker key={i} coordinate={{ latitude: lat, longitude: long }} title={r["incomingUser"]["name"].toUpperCase()}>
+                <View style={[styles.customMarker, styles.originMarker]}>
+
+                </View>
+              </Marker>
+            )
+          })}
+
         </MapView>
 
-        <SwitchStatus isSwitchOn={isSwitchOn} setIsSwitchOn={setIsSwitchOn} />
 
         {isSwitchOn ? (
-          <Text>Waiting For Requests...</Text>
+          pendingRequests.length === 0 && <Text>Waiting For Requests...</Text>
         ) : (
           <Text>Not Available For Request</Text>
         )}
@@ -203,26 +213,31 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
         {pendingRequests.length > 0 ? (
           <View style={styles.consumersList}>
             {/* <ProgressBar progress={1}></ProgressBar> */}
-            {pendingRequests.map((r, i) => {
-              return (
-                // <></>
-                <ConsumerCard
-                  key={i}
-                  consumerId={r["consumerId"]}
-                  consumerLocation={r["consumerLocation"]}
-                  name={r["incomingUser"]["name"].toUpperCase()}
-                  carType={r["incomingUser"]["owned_cars"][0]["make"].toUpperCase() + " " + r["incomingUser"]["owned_cars"][0]["model"].toUpperCase()}
-                  distance={+r.distance.toFixed(2) + "KM"}
-                  setIsRequestAccepted={setIsRequestAccepted}
-                  setRequestInfo={setRequestInfo}
-                  setPendingRequests = {setPendingRequests}
-                />
-              )
-            })}
+            <ScrollView>
+              {pendingRequests.map((r, i) => {
+                return (
+                  <>
+                    <ConsumerCard
+                      key={i}
+                      consumerId={r["consumerId"]}
+                      consumerLocation={r["consumerLocation"]}
+                      name={r["incomingUser"]["name"].toUpperCase()}
+                      carType={r["incomingUser"]["owned_cars"][0]["make"].toUpperCase() + " " + r["incomingUser"]["owned_cars"][0]["model"].toUpperCase()}
+                      distance={+r.distance.toFixed(2) + "KM"}
+                      setIsRequestAccepted={setIsRequestAccepted}
+                      setRequestInfo={setRequestInfo}
+                      setPendingRequests={setPendingRequests}
+                      map={mapRef}
+                    />
+                  </>
+                );
+              })}
+            </ScrollView>
           </View>
         ) : (
           <Text></Text>
         )}
+
       </View>
     </>
   );
@@ -236,16 +251,26 @@ const styles = StyleSheet.create({
   },
   map: {
     width: "100%",
-    height: "80%",
+    height: "50%",
   },
   consumersList: {
     flex: 1,
     width: "100%",
     marginTop: 10,
-    position: "absolute",
+    // position: "absolute",
   },
   listContentContainer: {
     paddingBottom: 16,
+  },
+  customMarker: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderColor: '#fff',
+    borderWidth: 2,
+  },
+  originMarker: {
+    backgroundColor: 'blue',
   },
 });
 

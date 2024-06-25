@@ -14,7 +14,7 @@ import * as Location from "expo-location";
 import ConsumerCard from "../../components/ProviderComponents/ConsumerCard";
 import SwitchStatus from "./../../components/ProviderComponents/SwitchStatus";
 import { ProgressBar } from "react-native-paper";
-import io from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { url } from "@/constants/url";
@@ -38,6 +38,7 @@ const ProviderHomeScreen = ({}) => {
   const [requestInfo, setRequestInfo] = useState({});
   const [trackFlag, setTrackFlag] = useState(false);
   const [startPickUp, setStartPickUp] = useState(false);
+  const [endProcess, setEndProcess] = useState(false);
   let intervalRef = useRef(null);
   let mapRef = useRef(null);
 
@@ -237,8 +238,9 @@ const ProviderHomeScreen = ({}) => {
 
       newsocket.on("HasArrived", () => {
         clearInterval(intervalRef.current);
+        setEndProcess(true);
         setIsRequestAccepted(false);
-        setRequestInfo({});
+        // setRequestInfo({});
         setPendingRequests([]);
       });
 
@@ -271,6 +273,13 @@ const ProviderHomeScreen = ({}) => {
     }
   };
 
+  const handleEndProcess = () => {
+    setEndProcess(false);
+    let consumerId = requestInfo["consumerId"];
+    socket.emit("ServiceEnded", { providerId: id, consumerId });
+    // console.log(requestInfo);
+    setRequestInfo({});
+  };
   // const origin = { latitude: 37.78825, longitude: -122.4324 };
   // const destination = { latitude: 40.79855, longitude: -100.4324 };
   // const region = {
@@ -325,10 +334,14 @@ const ProviderHomeScreen = ({}) => {
           })}
         </MapView>
 
-        {isSwitchOn ? (
-          pendingRequests.length === 0 && <Text>Waiting For Requests...</Text>
+        {isSwitchOn && pendingRequests.length === 0 && !endProcess ? (
+          <Text>Waiting For Requests...</Text>
         ) : (
-          <Text>Not Available For Request</Text>
+          !endProcess && <Text>Not Available For Request</Text>
+        )}
+
+        {isSwitchOn && endProcess && (
+          <Button title="End Process" onPress={handleEndProcess}></Button>
         )}
 
         {pendingRequests.length > 0 ? (

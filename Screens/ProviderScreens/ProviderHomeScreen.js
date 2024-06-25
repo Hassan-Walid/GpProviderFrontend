@@ -68,7 +68,7 @@ const ProviderHomeScreen = ({}) => {
   useEffect(() => {
     if (id) {
       axios
-        .post("http://192.168.1.2:8000/api/serviceProvider/approvalStatus", {
+        .post(url + "/api/serviceProvider/approvalStatus", {
           providerId: id,
         })
         .then((data) => {

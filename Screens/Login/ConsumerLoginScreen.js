@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { url } from "@/constants/url.js";
 
 const ConsumerLoginScreen = ({ navigation }) => {
   const { t } = useTranslation();
@@ -39,7 +40,7 @@ const ConsumerLoginScreen = ({ navigation }) => {
   const onSubmit = (data) => {
     if (data) {
       axios
-        .post("http://192.168.1.2:8000/api/serviceProvider/login", data)
+        .post(url + "/api/serviceProvider/login", data)
         .then(async (res) => {
           let foundUser = res.data;
           await AsyncStorage.setItem("userId", foundUser._id);

@@ -71,7 +71,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
 
     await axios
       // .post("https://gp-backend-8p08.onrender.com/api/serviceProvider/", data)
-      .post(url + "/api/serviceProvider/", data)
+      .post(url + "/api/serviceProvider", data)
 
       .then(async (res) => {
         if (res.status === 200) {

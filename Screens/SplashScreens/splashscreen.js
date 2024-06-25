@@ -8,6 +8,7 @@ const Splashscreen = ({ navigation }) => {
   useEffect(() => {
     const getCurrentUser = async () => {
       // AsyncStorage.clear();
+
       const userId = await AsyncStorage.getItem("userId");
       const userType = await AsyncStorage.getItem("userRole");
       console.log(userId);
@@ -19,8 +20,7 @@ const Splashscreen = ({ navigation }) => {
         }, 5000);
 
         return () => clearTimeout(timer);
-      }
-      else if (userId && userType == "provider" && navigation)
+      } else if (userId && userType == "provider" && navigation)
         navigation.navigate("ProviderHomeScreen");
     };
     getCurrentUser();

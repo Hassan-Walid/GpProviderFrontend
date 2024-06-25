@@ -65,7 +65,9 @@ const ProviderRegisterScreen = ({ navigation }) => {
     if (photos.length < 4) return;
 
     await axios
-      .post("https://gp-backend-8p08.onrender.com/api/serviceProvider/", data)
+      // .post("https://gp-backend-8p08.onrender.com/api/serviceProvider/", data)
+      .post("http://192.168.1.5:8000/api/serviceProvider/", data)
+
       .then(async (res) => {
         if (res.status === 200) {
           AsyncStorage.setItem("userId", res.data._id);

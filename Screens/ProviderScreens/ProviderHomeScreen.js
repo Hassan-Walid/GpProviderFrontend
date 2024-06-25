@@ -7,7 +7,7 @@ import {
   Text,
   View,
   Linking,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -20,7 +20,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
-
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -57,13 +56,11 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     AsyncStorage.getItem("userId").then((data) => {
       // console.log(data);
       setId(data);
-
     });
 
     AsyncStorage.getItem("userRole").then((data) => {
       // console.log(data);
       setType(data);
-
     });
     userLocation();
   }, []);
@@ -72,22 +69,28 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     if (isRequestAccepted) {
       intervalRef.current = setInterval(() => {
         console.log("tracked");
-        
+
         userLocation();
         let { latitude, longitude } = mapRegion;
         let { consumerId, consumerLocation } = requestInfo;
-        socket.emit("Tracked", { userId: id, targetId: consumerId, targetLocation: consumerLocation, location: { latitude, longitude } })
-      }, 3000)
+        socket.emit("Tracked", {
+          userId: id,
+          targetId: consumerId,
+          targetLocation: consumerLocation,
+          location: { latitude, longitude },
+        });
+      }, 3000);
     }
 
     return () => {
       clearInterval(intervalRef.current);
-    }
-  }, [isRequestAccepted])
+    };
+  }, [isRequestAccepted]);
 
   useEffect(() => {
     if (isSwitchOn) {
-      let newsocket = io("http://192.168.1.10:8000");
+      // let newsocket = io("https://gp-backend-8p08.onrender.com/");
+      let newsocket = io("http://192.168.1.5:8000/");
 
       newsocket.on("connect", () => {
         console.log("Connected to server");
@@ -99,41 +102,59 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
       //   console.log(notificationData);
       // })
 
-      newsocket.on("GetLocation", ({ consumerId, providerId, availableProvidersLength }) => {
-        newsocket.emit("Location", { consumerId, providerId, availableProvidersLength, location: mapRegion })
-      })
+      newsocket.on(
+        "GetLocation",
+        ({ consumerId, providerId, availableProvidersLength }) => {
+          newsocket.emit("Location", {
+            consumerId,
+            providerId,
+            availableProvidersLength,
+            location: mapRegion,
+          });
+        }
+      );
 
-      newsocket.on('disconnect', () => {
+      newsocket.on("disconnect", () => {
         console.log(`Disconnected from server`);
-      })
+      });
 
-      newsocket.on('IncomingRequest', async ({ consumerId, consumerLocation, distance }) => {
+      newsocket.on(
+        "IncomingRequest",
+        async ({ consumerId, consumerLocation, distance }) => {
+          console.log(
+            "Incoming Request from " +
+              consumerId +
+              " at lat: " +
+              consumerLocation +
+              " distance: " +
+              distance
+          );
 
-        console.log("Incoming Request from " + consumerId + " at lat: " + consumerLocation + " distance: " + distance);
+          let incomingUser = await axios
+            .get(`http://192.168.1.5:8000/api/user/${consumerId}`)
+            .then((res) => {
+              return res.data.user;
+            })
+            .catch((e) => {
+              console.log(e);
+            });
 
-        let incomingUser = await axios.get(`http://192.168.1.10:8000/api/user/${consumerId}`)
-          .then(res => {
-            return res.data.user;
-          })
-          .catch((e) => {
-            console.log(e);
-          })
-
-        setPendingRequests((allRequests) => [...allRequests, { consumerId, consumerLocation, distance, incomingUser }]);
-
-      })
+          setPendingRequests((allRequests) => [
+            ...allRequests,
+            { consumerId, consumerLocation, distance, incomingUser },
+          ]);
+        }
+      );
 
       setSocket(newsocket);
-
     } else {
       if (socket) {
-        socket.emit('disconnected', { id, type })
+        socket.emit("disconnected", { id, type });
         socket.disconnect();
         setSocket(null);
       }
     }
   }, [isSwitchOn]);
-
 
   const userLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -154,9 +175,7 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     }
   };
 
-
   const [isOpened, setIsOpened] = useState(false);
-
 
   const origin = { latitude: 37.78825, longitude: -122.4324 };
   const destination = { latitude: 40.79855, longitude: -100.4324 };
@@ -167,11 +186,9 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     longitudeDelta: 0.0421,
   };
 
-
-
   return (
     <>
-      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ justifyContent: "center", alignItems: "center" }}>
         <SwitchStatus isSwitchOn={isSwitchOn} setIsSwitchOn={setIsSwitchOn} />
       </View>
 
@@ -182,7 +199,6 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
           followsUserLocation={true}
           ref={mapRef}
           region={mapRegion}
-          
         >
           <Marker coordinate={mapRegion} title="You"></Marker>
 
@@ -193,16 +209,16 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 
             return (
               // <></>
-              <Marker key={i} coordinate={{ latitude: lat, longitude: long }} title={r["incomingUser"]["name"].toUpperCase()}>
-                <View style={[styles.customMarker, styles.originMarker]}>
-
-                </View>
+              <Marker
+                key={i}
+                coordinate={{ latitude: lat, longitude: long }}
+                title={r["incomingUser"]["name"].toUpperCase()}
+              >
+                <View style={[styles.customMarker, styles.originMarker]}></View>
               </Marker>
-            )
+            );
           })}
-
         </MapView>
-
 
         {isSwitchOn ? (
           pendingRequests.length === 0 && <Text>Waiting For Requests...</Text>
@@ -222,7 +238,15 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
                       consumerId={r["consumerId"]}
                       consumerLocation={r["consumerLocation"]}
                       name={r["incomingUser"]["name"].toUpperCase()}
-                      carType={r["incomingUser"]["owned_cars"][0]["make"].toUpperCase() + " " + r["incomingUser"]["owned_cars"][0]["model"].toUpperCase()}
+                      carType={
+                        r["incomingUser"]["owned_cars"][0][
+                          "make"
+                        ].toUpperCase() +
+                        " " +
+                        r["incomingUser"]["owned_cars"][0][
+                          "model"
+                        ].toUpperCase()
+                      }
                       distance={+r.distance.toFixed(2) + "KM"}
                       setIsRequestAccepted={setIsRequestAccepted}
                       setRequestInfo={setRequestInfo}
@@ -237,7 +261,6 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
         ) : (
           <Text></Text>
         )}
-
       </View>
     </>
   );
@@ -266,11 +289,11 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    borderColor: '#fff',
+    borderColor: "#fff",
     borderWidth: 2,
   },
   originMarker: {
-    backgroundColor: 'blue',
+    backgroundColor: "blue",
   },
 });
 

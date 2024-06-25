@@ -7,18 +7,19 @@ const { height } = Dimensions.get("window");
 const Splashscreen = ({ navigation }) => {
   useEffect(() => {
     const getCurrentUser = async () => {
-      //   AsyncStorage.clear();
+      // AsyncStorage.clear();
       const userId = await AsyncStorage.getItem("userId");
       const userType = await AsyncStorage.getItem("userRole");
       console.log(userId);
+      console.log(userType);
+
       if (!userId && navigation) {
         const timer = setTimeout(() => {
           navigation.navigate("LoginScreen");
         }, 5000);
 
         return () => clearTimeout(timer);
-      } else if (userId && userType == "consumer" && navigation)
-        navigation.navigate("Home");
+      }
       else if (userId && userType == "provider" && navigation)
         navigation.navigate("ProviderHomeScreen");
     };

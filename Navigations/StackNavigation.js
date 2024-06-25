@@ -15,10 +15,22 @@ import BottomTabNavigator from "./BottomTabNavigator";
 const Stack = createStackNavigator();
 export function MyStack(/*{ socket }*/) {
   return (
+
     <Stack.Navigator>
+      <Stack.Screen
+        name="ProviderRegScreen"
+        component={ProviderRegisterScreen}
+        options={{ headerShown: false }}
+      />
+      
       <Stack.Screen
         name="SplashScreen"
         component={SplashScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -27,7 +39,7 @@ export function MyStack(/*{ socket }*/) {
         options={{ headerShown: false }}
       />
 
-      <Stack.Screen
+    <Stack.Screen
         name="Profile"
         component={BottomTabNavigator}
         options={{ headerShown: false }}
@@ -39,16 +51,8 @@ export function MyStack(/*{ socket }*/) {
         // initialParams={{ socket }}
       />
 
-      <Stack.Screen
-        name="ProviderRegScreen"
-        component={ProviderRegisterScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="LoginScreen"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
+      
+      
     </Stack.Navigator>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Switch } from "react-native-paper";
 
-const SwitchStatus = ({ setIsSwitchOn, isSwitchOn }) => {
+const SwitchStatus = ({ setIsSwitchOn, isSwitchOn,disableSwitch }) => {
   // handleSwitchChange(isSwitchOn);
 
   const onToggleSwitch = () => setIsSwitchOn((old) => !old);
@@ -16,6 +16,7 @@ const SwitchStatus = ({ setIsSwitchOn, isSwitchOn }) => {
         style={{ transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }] }}
         value={isSwitchOn}
         onValueChange={onToggleSwitch}
+        disabled={disableSwitch}
       />
     </View>
   );

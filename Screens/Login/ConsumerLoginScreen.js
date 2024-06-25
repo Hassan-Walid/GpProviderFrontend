@@ -15,6 +15,8 @@ import FormInput from "../../components/formInput.js";
 import CustomButton from "@/components/CustomButton";
 import { useTranslation } from "react-i18next";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ConsumerLoginScreen = ({ navigation }) => {
   const { t } = useTranslation();
@@ -35,8 +37,19 @@ const ConsumerLoginScreen = ({ navigation }) => {
   });
 
   const onSubmit = (data) => {
-    Alert.alert("Successful", JSON.stringify(data));
-    navigation.navigate("Home");
+    if(data)
+      {
+        axios.post("http://192.168.1.2:8000/api/serviceProvider/login",data)
+        .then(async (res)=>{
+        let foundUser = res.data
+          await AsyncStorage.setItem('userId',foundUser._id)
+          await AsyncStorage.setItem('userRole','provider')
+          navigation.navigate('ProviderHomeScreen');
+        })
+        .catch((err)=>{
+          console.log(err);
+        })
+      }
   };
 
   return (

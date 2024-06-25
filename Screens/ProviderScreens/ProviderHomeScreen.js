@@ -21,6 +21,7 @@ import axios from "axios";
 
 const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 
+  const [approvalStatus,setApprovalStatus] = useState();
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -28,20 +29,7 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
     longitudeDelta: 0.0421,
   });
 
-  // const [mapRegion2, setMapRegion2] = useState({
-  //   latitude: 37.78825,
-  //   longitude: -122.4324,
-  //   latitudeDelta: 0.0922,
-  //   longitudeDelta: 0.0421,
-  // });
-
-  // const [consumers, setConsumers] = useState([
-  //   { id: "1", name: "Provider 1", distance: "2 km", carType: "Sedan" },
-  //   { id: "2", name: "Provider 2", distance: "5 km", carType: "SUV" },
-  //   { id: "3", name: "Provider 3", distance: "3 km", carType: "Sedan" },
-  //   { id: "4", name: "Provider 4", distance: "7 km", carType: "SUV" },
-  // ]);
-
+  const disableSwitch = approvalStatus==='approved'?false:true;
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [socket, setSocket] = useState(null);
   const [id, setId] = useState(null);
@@ -55,19 +43,30 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((data) => {
-      // console.log(data);
       setId(data);
-
     });
 
     AsyncStorage.getItem("userRole").then((data) => {
-      // console.log(data);
       setType(data);
-
     });
+
+    
+    
     userLocation();
   }, []);
 
+  useEffect(()=>{
+    if(id)
+      {
+        axios.post('http://192.168.1.2:8000/api/serviceProvider/approvalStatus',{providerId:id}).then((data)=>{
+          console.log(data.data);
+          setApprovalStatus(data.data);
+        })
+        .catch((err)=>{
+          console.log(err);
+        })
+      }
+  },[id])
   useEffect(() => {
     if (isRequestAccepted) {
       intervalRef.current = setInterval(() => {
@@ -171,8 +170,11 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 
   return (
     <>
+      {approvalStatus=="pending" && <View style={styles.approvalContainer}>
+          <Text style={styles.approvalText}>your documents is being checked</Text>
+        </View>}
       <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <SwitchStatus isSwitchOn={isSwitchOn} setIsSwitchOn={setIsSwitchOn} />
+        <SwitchStatus isSwitchOn={isSwitchOn} setIsSwitchOn={setIsSwitchOn} disableSwitch={disableSwitch} />
       </View>
 
       <View style={styles.mapContainer}>
@@ -244,6 +246,13 @@ const ProviderHomeScreen = ({ service, navigation /*route*/ }) => {
 };
 
 const styles = StyleSheet.create({
+  approvalText:{
+    textAlign:"center",
+    color:"white",
+    fontWeight:"bold",
+    fontSize:18
+
+  },
   mapContainer: {
     flex: 1,
     // justifyContent: "space-around",
@@ -272,6 +281,15 @@ const styles = StyleSheet.create({
   originMarker: {
     backgroundColor: 'blue',
   },
+  approvalContainer:{
+    backgroundColor:"red",
+    width:"95%",
+    height:30,
+    borderRadius:15,
+    justifyContent:"center",
+    marginVertical:10,
+    marginHorizontal:"auto",
+  }
 });
 
 export default ProviderHomeScreen;

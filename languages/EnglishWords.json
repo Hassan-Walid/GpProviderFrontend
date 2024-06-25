@@ -28,6 +28,7 @@
   "car_make": "Car make",
   "submit": "Submit",
   "no_account": "Don't have an account",
+  "have_account":"Already have an account",
   "register_now": "Register now",
   "successful": "Registration successful",
   "Register as Consumer":"Register as Consumer",

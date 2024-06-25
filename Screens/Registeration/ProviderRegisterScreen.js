@@ -23,6 +23,7 @@ import axios from "axios";
 import { firebase } from "../../firebaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { url } from "./../../constants/url";
+import { Callout } from "react-native-maps";
 const ProviderRegisterScreen = ({ navigation }) => {
   const { t } = useTranslation();
 
@@ -42,6 +43,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
     location: z.string(),
     service_type: z.string().toLowerCase(),
     profile_pic: z.string(),
+    license_plate: z.string(),
   });
 
   const { control, handleSubmit, setValue, watch } = useForm({
@@ -56,6 +58,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
       location: "",
       service_type: "",
       profile_pic: "",
+      license_plate: "",
     },
     resolver: zodResolver(formSchema),
   });
@@ -64,6 +67,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
     // Alert.alert("Successful", JSON.stringify(data));
 
     if (photos.length < 4) return;
+    Alert.alert("Successful", "" + photos.length);
 
     await axios
       // .post("https://gp-backend-8p08.onrender.com/api/serviceProvider/", data)
@@ -113,7 +117,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
         console.error("Request failed", error);
       });
   };
-
+  console.log(photos[0]);
   useEffect(() => {
     (async () => {
       const { status } =
@@ -177,6 +181,12 @@ const ProviderRegisterScreen = ({ navigation }) => {
         />
         <FormInput
           control={control}
+          name="license_plate"
+          placeholder={t("license plate")}
+          style={styles.input}
+        />
+        <FormInput
+          control={control}
           name="make"
           placeholder={t("car make")}
           style={styles.input}
@@ -223,7 +233,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
           "driver_licence_pic",
           "national_id_pic",
           "profile_pic",
-        ].map((field) => (
+        ].map((field, index) => (
           <Controller
             key={field}
             control={control}
@@ -238,10 +248,18 @@ const ProviderRegisterScreen = ({ navigation }) => {
                     Select {t(field.replace(/_/g, " "))}
                   </Text>
                 </TouchableOpacity>
+                {photos[index] && (
+                  <Image
+                    source={{ uri: photos[index][field] }}
+                    style={{ width: 100, height: 70, borderRadius: 15 }}
+                  ></Image>
+                )}
+                {console.log(photos[index])}
               </View>
             )}
           />
         ))}
+
         <View style={styles.buttonContainer}>
           <CustomButton
             title={t("Submit")}
@@ -250,10 +268,14 @@ const ProviderRegisterScreen = ({ navigation }) => {
         </View>
         <View style={styles.registerTxtContainer}>
           <Text style={styles.registerTxt}>
-            {t("no_account")}?{" "}
-            <Text style={{ color: "blue", marginHorizontal: 3 }}>
-              {t("Register Now")}
-            </Text>
+            {t("have_account")}?{" "}
+            <TouchableOpacity
+              onPress={() => navigation.navigate("LoginScreen")}
+            >
+              <Text style={{ color: "blue", marginHorizontal: 3 }}>
+                {t("Login")}
+              </Text>
+            </TouchableOpacity>
           </Text>
         </View>
       </View>
@@ -300,12 +322,16 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     marginBottom: 16,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   imagePicker: {
     padding: 10,
     borderRadius: 5,
     backgroundColor: "#6200ee",
     alignItems: "center",
+    width: 170,
   },
   imagePickerText: {
     color: "#fff",

@@ -9,8 +9,24 @@ export function MyStack(/*{ socket }*/) {
   return (
     <Stack.Navigator>
       <Stack.Screen
+        name="ProviderRegScreen"
+        component={ProviderRegisterScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
         name="SplashScreen"
         component={SplashScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LoginScreen"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Home"
+        component={BottomTabNavigator}
         options={{ headerShown: false }}
       />
 
@@ -19,17 +35,6 @@ export function MyStack(/*{ socket }*/) {
         component={ProviderHomeScreen}
         options={{ headerShown: false }}
         // initialParams={{ socket }}
-      />
-
-      <Stack.Screen
-        name="ProviderRegScreen"
-        component={ProviderRegisterScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="LoginScreen"
-        component={LoginScreen}
-        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

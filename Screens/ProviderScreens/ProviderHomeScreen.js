@@ -20,6 +20,7 @@ import axios from "axios";
 import { url } from "@/constants/url";
 
 const ProviderHomeScreen = ({}) => {
+  const [approvalStatus, setApprovalStatus] = useState();
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
     longitude: -122.4324,
@@ -27,6 +28,7 @@ const ProviderHomeScreen = ({}) => {
     longitudeDelta: 0.0421,
   });
 
+  const disableSwitch = approvalStatus === "approved" ? false : true;
   const [isSwitchOn, setIsSwitchOn] = useState(false);
   const [socket, setSocket] = useState(null);
   const [id, setId] = useState(null);
@@ -45,14 +47,13 @@ const ProviderHomeScreen = ({}) => {
 
   useEffect(() => {
     AsyncStorage.getItem("userId").then((data) => {
-      // console.log(data);
       setId(data);
     });
 
     AsyncStorage.getItem("userRole").then((data) => {
-      // console.log(data);
       setType(data);
     });
+
     userLocation();
 
     return () => {
@@ -64,6 +65,21 @@ const ProviderHomeScreen = ({}) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (id) {
+      axios
+        .post("http://192.168.1.2:8000/api/serviceProvider/approvalStatus", {
+          providerId: id,
+        })
+        .then((data) => {
+          console.log(data.data);
+          setApprovalStatus(data.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [id]);
   useEffect(() => {
     if (isRequestAccepted) {
       intervalRef.current = setInterval(() => {
@@ -266,8 +282,19 @@ const ProviderHomeScreen = ({}) => {
 
   return (
     <>
+      {approvalStatus == "pending" && (
+        <View style={styles.approvalContainer}>
+          <Text style={styles.approvalText}>
+            your documents is being checked
+          </Text>
+        </View>
+      )}
       <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <SwitchStatus isSwitchOn={isSwitchOn} setIsSwitchOn={setIsSwitchOn} />
+        <SwitchStatus
+          isSwitchOn={isSwitchOn}
+          setIsSwitchOn={setIsSwitchOn}
+          disableSwitch={disableSwitch}
+        />
       </View>
 
       <View style={styles.mapContainer}>
@@ -347,6 +374,12 @@ const ProviderHomeScreen = ({}) => {
 };
 
 const styles = StyleSheet.create({
+  approvalText: {
+    textAlign: "center",
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
   mapContainer: {
     flex: 1,
     // justifyContent: "space-around",
@@ -374,6 +407,15 @@ const styles = StyleSheet.create({
   },
   originMarker: {
     backgroundColor: "blue",
+  },
+  approvalContainer: {
+    backgroundColor: "red",
+    width: "95%",
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    marginVertical: 10,
+    marginHorizontal: "auto",
   },
 });
 

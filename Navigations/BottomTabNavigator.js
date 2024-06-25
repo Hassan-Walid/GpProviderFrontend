@@ -24,8 +24,8 @@ const BottomTabNavigator = () => {
               display: 'flex',
               position: 'absolute',
               bottom: 0,
-              left: 10,
-              right: 10,
+              left: 0,
+              right: 0,
               elevation: 5,
               backgroundColor: "#9AB3CA",
               borderRadius: 15,
@@ -66,9 +66,9 @@ const BottomTabNavigator = () => {
                   top: Platform.OS === 'ios' ? 10 : 0,
                 }}>
                 <Icon
-                  name="message1"
+                  name="home"
                   size={30}
-                  color={focused ? 'white' : "black"}
+                  color={focused ? 'white' : "lightgray"}
                 />
               </View>
             ),
@@ -85,9 +85,9 @@ const BottomTabNavigator = () => {
                   top: Platform.OS === 'ios' ? 10 : 0,
                 }}>
                 <Icon
-                  name="message1"
+                  name="user"
                   size={30}
-                  color={focused ? 'white' : "black"}
+                  color={focused ? 'white' : "lightgray"}
                 />
               </View>
             ),

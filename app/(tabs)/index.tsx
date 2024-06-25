@@ -24,20 +24,20 @@ export default function HomeScreen() {
 
   // const socket = io; // Replace with your Socket.IO server URL
 
-  // if (fontsLoaded) {
-  //   return (
-  //     <>
-  //       <MyStack></MyStack>
-  //     </>
-  //   );
-  // }
+  if (fontsLoaded) {
+    return (
+      <>
+        <MyStack></MyStack>
+      </>
+    );
+  }
 
   return (
     <>
       {/* <MyTabs /> */}
-      {/* <LoadingScreen /> */}
+      <LoadingScreen />
       {/* <Splashscreen /> */}
-      <MyStack /*socket={socket}*/></MyStack>
+      {/* <MyStack ></MyStack> */}
       {/* <ProviderRegisterScreen navigation={null}></ProviderRegisterScreen> */}
     </>
   );

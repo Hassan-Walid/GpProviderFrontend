@@ -50,7 +50,8 @@ const Profile = () => {
 
 const styles = StyleSheet.create({
   profile: {
-    flex: 1,
+    // flex: 1,
+    justifyContent:"center"
   },
   header: {
     backgroundColor: "#9AB3CA",
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     
   },
   inputContainer: {
-    flex: 1,
+    // flex: 1,
     // justifyContent:"space-around",
     marginVertical: 80,
     paddingHorizontal: 20,
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   buttonContainer: {
-    marginTop: 16,
+    marginTop: 10,
     width: "100%",
     borderRadius: 8,
     overflow: "hidden",

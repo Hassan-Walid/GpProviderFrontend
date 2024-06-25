@@ -18,7 +18,7 @@ import io from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-const ProviderHomeScreen = ({  }) => {
+const ProviderHomeScreen = ({ }) => {
 
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
@@ -39,6 +39,10 @@ const ProviderHomeScreen = ({  }) => {
   let intervalRef = useRef(null);
   let mapRef = useRef(null);
 
+  let confirmAccept = (consumerId, providerId) => {
+    socket.emit("RequestAccepted", {consumerId, userId: providerId})
+  }
+
   useEffect(() => {
     AsyncStorage.getItem("userId").then((data) => {
       // console.log(data);
@@ -52,6 +56,14 @@ const ProviderHomeScreen = ({  }) => {
 
     });
     userLocation();
+
+    return () => {
+      if (socket && id && type) {
+        socket.emit('disconnected', { id, type })
+        socket.disconnect();
+        setSocket(null);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -70,18 +82,28 @@ const ProviderHomeScreen = ({  }) => {
           if (startPickUp) {
             target = targetLocation;
           }
-          socket.emit("PickUpTracking", {
-            userId: providerId,
-            targetId: consumerId,
-            targetLocation: target,
-            providerLiveLocation: { latitude, longitude },
-            startPickUp
-          })
+
+          if (socket) {
+            socket.emit("PickUpTracking", {
+              userId: providerId,
+              targetId: consumerId,
+              targetLocation: target,
+              providerLiveLocation: { latitude, longitude },
+              startPickUp
+            })
+          } else {
+            clearInterval(intervalRef.current);
+          }
 
         } else {
 
           let { consumerId, consumerLocation } = requestInfo;
-          socket.emit("Tracked", { userId: id, targetId: consumerId, targetLocation: consumerLocation, location: { latitude, longitude } })
+
+          if (socket) {
+            socket.emit("Tracked", { userId: id, targetId: consumerId, targetLocation: consumerLocation, location: { latitude, longitude } })
+          } else {
+            clearInterval(intervalRef.current);
+          }
         }
       }, 3000)
     }
@@ -254,7 +276,7 @@ const ProviderHomeScreen = ({  }) => {
                 return (
                   <>
                     <ConsumerCard
-                      key={i}
+                      key={r["consumerId"]}
                       consumerId={r["consumerId"]}
                       consumerLocation={r["consumerLocation"]}
                       name={r["incomingUser"]["name"].toUpperCase()}
@@ -264,6 +286,8 @@ const ProviderHomeScreen = ({  }) => {
                       setRequestInfo={setRequestInfo}
                       setPendingRequests={setPendingRequests}
                       map={mapRef}
+                      id = {id}
+                      confirmAccept = {confirmAccept}
                     />
                   </>
                 );

@@ -5,7 +5,7 @@ import CustomButton from "../CustomButton";
 
 const LeftContent = (props) => <Avatar.Icon {...props} icon="account" />;
 
-const ConsumerCard = ({ map, name, distance, carType, consumerId, consumerLocation, setIsRequestAccepted, setRequestInfo, setPendingRequests }) => {
+const ConsumerCard = ({confirmAccept, id, map, name, distance, carType, consumerId, consumerLocation, setIsRequestAccepted, setRequestInfo, setPendingRequests }) => {
 
   let [showNavigateButton, setShowNavigateButton] = React.useState(false);
 
@@ -16,10 +16,12 @@ const ConsumerCard = ({ map, name, distance, carType, consumerId, consumerLocati
         return r["consumerId"] === consumerId;
       })
     });
-
+    ///Socket.emit("sdada")
     setShowNavigateButton(true);
-    setRequestInfo({ consumerId, consumerLocation })
+    setRequestInfo({ consumerId, consumerLocation });
+    confirmAccept(consumerId, id);
   }
+
 
   let handleLink = () => {
     console.log(consumerLocation);

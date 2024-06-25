@@ -36,7 +36,8 @@ const ConsumerLoginScreen = ({ navigation }) => {
 
   const onSubmit = (data) => {
     Alert.alert("Successful", JSON.stringify(data));
-    navigation.navigate("Home");
+    // navigation.navigate("Home");
+    navigation.navigate("ProviderHomeScreen");
   };
 
   return (

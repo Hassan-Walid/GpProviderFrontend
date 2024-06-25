@@ -17,6 +17,7 @@ import { ProgressBar } from "react-native-paper";
 import io from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { url } from "@/constants/url";
 
 const ProviderHomeScreen = ({}) => {
   const [mapRegion, setMapRegion] = useState({
@@ -115,7 +116,7 @@ const ProviderHomeScreen = ({}) => {
   useEffect(() => {
     if (isSwitchOn) {
       // let newsocket = io("https://gp-backend-8p08.onrender.com/");
-      let newsocket = io("http://192.168.1.5:8000/");
+      let newsocket = io(url);
 
       newsocket.on("connect", () => {
         console.log("Connected to server");
@@ -156,7 +157,7 @@ const ProviderHomeScreen = ({}) => {
           );
 
           let incomingUser = await axios
-            .get(`http://192.168.1.10:8000/api/user/${consumerId}`)
+            .get(`${url}/api/user/${consumerId}`)
             .then((res) => {
               return res.data.user;
             })
@@ -184,7 +185,7 @@ const ProviderHomeScreen = ({}) => {
           );
 
           let incomingUser = await axios
-            .get(`http://192.168.1.10:8000/api/user/${consumerId}`)
+            .get(`${url}/api/user/${consumerId}`)
             .then((res) => {
               return res.data.user;
             })

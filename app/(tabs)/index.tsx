@@ -1,14 +1,8 @@
 import React, { useEffect } from "react";
-import { StatusBar, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { MyStack } from "../../Navigations/StackNavigation.js";
 import { useFonts } from "expo-font";
 import LoadingScreen from "../../Screens/SplashScreens/loadingScreen.js";
-import Splashscreen from "@/Screens/SplashScreens/splashscreen.js";
-import { MyTabs } from "../../Navigations/ProviderTopTabsNavigator/BottomTabsNavigation.js";
-// import { MyTabs } from "../../Navigations/ProviderTopTabsNavigator/TopTabsNavigation.js";
-import ProviderRegisterScreen from "@/Screens/Registeration/ProviderRegisterScreen.js";
-import ProviderHomeScreen from "@/Screens/ProviderScreens/ProviderHomeScreen.js";
-import io from "socket.io-client";
 const fonts = {
   Oswald: require("../../assets/fonts/static/Oswald-Bold.ttf"),
 };

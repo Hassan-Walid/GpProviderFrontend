@@ -22,6 +22,7 @@ import i18n from "../../app/(tabs)/i18n";
 import axios from "axios";
 import { firebase } from "../../firebaseConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { url } from "./../../constants/url";
 const ProviderRegisterScreen = ({ navigation }) => {
   const { t } = useTranslation();
 
@@ -66,7 +67,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
 
     await axios
       // .post("https://gp-backend-8p08.onrender.com/api/serviceProvider/", data)
-      .post("http://192.168.1.5:8000/api/serviceProvider/", data)
+      .post(url + "/api/serviceProvider/", data)
 
       .then(async (res) => {
         if (res.status === 200) {

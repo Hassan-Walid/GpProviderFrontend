@@ -1,16 +1,8 @@
 import { createStackNavigator } from "@react-navigation/stack";
-import ConsumerRegisterScreen from "../Screens/Registeration/ConsumerRegisterScreen";
 import ProviderRegisterScreen from "../Screens/Registeration/ProviderRegisterScreen";
 import LoginScreen from "../Screens/Login/ConsumerLoginScreen";
-import userTypeScreen from "@/Screens/SplashScreens/userTypeScreen";
 import SplashScreen from "@/Screens/SplashScreens/splashscreen";
-import RoadServiceScreen from "@/Screens/RoadServices/roadServiceScreen";
-// import Home from "../Screens/Home/Home"
-import Vehichles from "../Screens/RoadServices/Vehicles";
 import ProviderHomeScreen from "../Screens/ProviderScreens/ProviderHomeScreen";
-// import Profile from "../Screens/Profile/profile"
-
-import BottomTabNavigator from "./BottomTabNavigator";
 
 const Stack = createStackNavigator();
 export function MyStack(/*{ socket }*/) {
@@ -21,17 +13,7 @@ export function MyStack(/*{ socket }*/) {
         component={SplashScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Home"
-        component={BottomTabNavigator}
-        options={{ headerShown: false }}
-      />
 
-      <Stack.Screen
-        name="Profile"
-        component={BottomTabNavigator}
-        options={{ headerShown: false }}
-      />
       <Stack.Screen
         name="ProviderHomeScreen"
         component={ProviderHomeScreen}

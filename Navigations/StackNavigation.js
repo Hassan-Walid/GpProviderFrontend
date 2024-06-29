@@ -3,7 +3,7 @@ import ProviderRegisterScreen from "../Screens/Registeration/ProviderRegisterScr
 import LoginScreen from "../Screens/Login/ConsumerLoginScreen";
 import SplashScreen from "@/Screens/SplashScreens/splashscreen";
 import ProviderHomeScreen from "../Screens/ProviderScreens/ProviderHomeScreen";
-
+import LanguageScreen from "../Screens/SplashScreens/languageScreen"
 const Stack = createStackNavigator();
 export function MyStack(/*{ socket }*/) {
   return (
@@ -11,6 +11,11 @@ export function MyStack(/*{ socket }*/) {
       <Stack.Screen
         name="SplashScreen"
         component={SplashScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LanguageScreen"
+        component={LanguageScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

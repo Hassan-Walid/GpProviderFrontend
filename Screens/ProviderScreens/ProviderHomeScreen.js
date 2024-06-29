@@ -9,7 +9,7 @@ import {
   Linking,
   ScrollView,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import ConsumerCard from "../../components/ProviderComponents/ConsumerCard";
 import SwitchStatus from "./../../components/ProviderComponents/SwitchStatus";
@@ -88,6 +88,8 @@ const ProviderHomeScreen = ({}) => {
 
         userLocation();
         let { latitude, longitude } = mapRegion;
+        console.log("latitude", latitude);
+        console.log("longitude", longitude);
 
         if (trackFlag) {
           let { consumerId, consumerLocation, targetLocation } = requestInfo;
@@ -99,7 +101,7 @@ const ProviderHomeScreen = ({}) => {
 
           if (socket) {
             socket.emit("PickUpTracking", {
-              userId: providerId,
+              userId: id,
               targetId: consumerId,
               targetLocation: target,
               providerLiveLocation: { latitude, longitude },
@@ -140,6 +142,12 @@ const ProviderHomeScreen = ({}) => {
         newsocket.emit("connected", { id, type });
       });
 
+      // newsocket.on("notification", (data) => {
+      //   console.log("message data : ", data);
+      //   if (data.CancelMessage === "Cancel") {
+      //     clearInterval(intervalRef.current);
+      //   }
+      // });
       // newsocket.on('notification', (notificationData) => {
       //   console.log("Notification from server");
       //   console.log(notificationData);
@@ -225,6 +233,7 @@ const ProviderHomeScreen = ({}) => {
       );
 
       newsocket.on("StartPickUp", () => {
+        console.log("Start PickUp");
         setStartPickUp(true);
       });
 
@@ -232,8 +241,10 @@ const ProviderHomeScreen = ({}) => {
         clearInterval(intervalRef.current);
         setIsRequestAccepted(false);
         setTrackFlag(false);
-        setRequestInfo({});
+        // setRequestInfo({});
         setPendingRequests([]);
+        setStartPickUp(false);
+        setEndProcess(true);
       });
 
       newsocket.on("HasArrived", () => {
@@ -274,8 +285,10 @@ const ProviderHomeScreen = ({}) => {
   };
 
   const handleEndProcess = () => {
+    console.log("end process handle ");
     setEndProcess(false);
     let consumerId = requestInfo["consumerId"];
+    // console.log(consumerId);
     socket.emit("ServiceEnded", { providerId: id, consumerId });
     // console.log(requestInfo);
     setRequestInfo({});
@@ -320,31 +333,64 @@ const ProviderHomeScreen = ({}) => {
             let coordinate = r["consumerLocation"];
             let lat = +coordinate["latitude"];
             let long = +coordinate["longitude"];
+            // pickup
+            let latTarget;
+            let longTarget;
+            let coordinateTargetLocation;
+
+            if (r["targetLocation"]) {
+              coordinateTargetLocation = r["targetLocation"];
+              latTarget = +coordinateTargetLocation["latitude"];
+              longTarget = +coordinateTargetLocation["longitude"];
+            }
 
             return (
               // <></>
-              <Marker
-                key={i}
-                coordinate={{ latitude: lat, longitude: long }}
-                title={r["incomingUser"]["name"].toUpperCase()}
-              >
-                <View style={[styles.customMarker, styles.originMarker]}></View>
-              </Marker>
+              <>
+                <Marker
+                  key={i}
+                  coordinate={{ latitude: lat, longitude: long }}
+                  title={r["incomingUser"]["name"].toUpperCase()}
+                >
+                  {/* <View
+                    style={[styles.customMarker, styles.originMarker]}
+                  ></View> */}
+                </Marker>
+                {r["targetLocation"] && (
+                  <Marker
+                    coordinate={{ latitude: latTarget, longitude: longTarget }}
+                    title="Target Location"
+                  />
+                )}
+                {r["targetLocation"] && (
+                  <Polyline
+                    coordinates={[
+                      { latitude: lat, longitude: long },
+                      { latitude: latTarget, longitude: longTarget },
+                    ]}
+                    strokeColor="#FF0000"
+                    strokeWidth={6}
+                  />
+                )}
+              </>
             );
           })}
         </MapView>
 
-        {isSwitchOn && pendingRequests.length === 0 && !endProcess ? (
+        {isSwitchOn &&
+        pendingRequests.length === 0 &&
+        !startPickUp &&
+        !endProcess ? (
           <Text>Waiting For Requests...</Text>
         ) : (
-          !endProcess && <Text>Not Available For Request</Text>
+          !endProcess && !isSwitchOn && <Text>Not Available For Request</Text>
         )}
 
         {isSwitchOn && endProcess && (
           <Button title="End Process" onPress={handleEndProcess}></Button>
         )}
 
-        {pendingRequests.length > 0 ? (
+        {!startPickUp && pendingRequests.length > 0 ? (
           <View style={styles.consumersList}>
             {/* <ProgressBar progress={1}></ProgressBar> */}
             <ScrollView>
@@ -352,6 +398,7 @@ const ProviderHomeScreen = ({}) => {
                 return (
                   <>
                     <ConsumerCard
+                      targetLocation={r["targetLocation"]}
                       key={r["consumerId"]}
                       consumerId={r["consumerId"]}
                       consumerLocation={r["consumerLocation"]}
@@ -381,6 +428,8 @@ const ProviderHomeScreen = ({}) => {
         ) : (
           <Text></Text>
         )}
+
+        {startPickUp && <Text>In PackUp Process</Text>}
       </View>
     </>
   );

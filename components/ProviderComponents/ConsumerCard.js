@@ -5,8 +5,20 @@ import CustomButton from "../CustomButton";
 
 const LeftContent = (props) => <Avatar.Icon {...props} icon="account" />;
 
-const ConsumerCard = ({confirmAccept, id, map, name, distance, carType, consumerId, consumerLocation, setIsRequestAccepted, setRequestInfo, setPendingRequests }) => {
-
+const ConsumerCard = ({
+  confirmAccept,
+  id,
+  map,
+  name,
+  distance,
+  carType,
+  consumerId,
+  consumerLocation,
+  targetLocation,
+  setIsRequestAccepted,
+  setRequestInfo,
+  setPendingRequests,
+}) => {
   let [showNavigateButton, setShowNavigateButton] = React.useState(false);
 
   let handleAccept = () => {
@@ -14,32 +26,46 @@ const ConsumerCard = ({confirmAccept, id, map, name, distance, carType, consumer
     setPendingRequests((old) => {
       return old.filter((r) => {
         return r["consumerId"] === consumerId;
-      })
+      });
     });
     ///Socket.emit("sdada")
     setShowNavigateButton(true);
-    setRequestInfo({ consumerId, consumerLocation });
+    if (!targetLocation) {
+      setRequestInfo({ consumerId, consumerLocation });
+    } else {
+      setRequestInfo({ consumerId, consumerLocation, targetLocation });
+    }
     confirmAccept(consumerId, id);
-  }
+  };
 
+  let handleReject = () => {
+    setPendingRequests((old) => {
+      return old.filter((r) => {
+        return r["consumerId"] !== consumerId;
+      });
+    });
+  };
 
   let handleLink = () => {
     console.log(consumerLocation);
     const url = `https://www.google.com/maps/dir/?api=1&destination=${consumerLocation.latitude},${consumerLocation.longitude}`;
     Linking.openURL(url);
-  }
+  };
 
   let focusOnMarker = () => {
     let latitude = +consumerLocation["latitude"];
     let longitude = +consumerLocation["longitude"];
 
-    map.current.animateToRegion({
-      latitude,
-      longitude,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    }, 1000)
-  }
+    map.current.animateToRegion(
+      {
+        latitude,
+        longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      },
+      1000
+    );
+  };
 
   return (
     <View style={styles.cardContainer}>
@@ -57,12 +83,17 @@ const ConsumerCard = ({confirmAccept, id, map, name, distance, carType, consumer
               <Text variant="bodyMedium" style={styles.carType}>
                 {carType}
               </Text>
+
+              {targetLocation && (
+                <Text variant="bodyMedium" style={styles.carType}>
+                  {targetLocation["name"]}
+                </Text>
+              )}
             </View>
           </View>
         </Card.Content>
         <Card.Actions style={styles.actions}>
           <View style={styles.button}>
-
             {!showNavigateButton ? (
               <>
                 <View style={{ width: "33%" }}>
@@ -75,7 +106,7 @@ const ConsumerCard = ({confirmAccept, id, map, name, distance, carType, consumer
                 <View style={{ width: "33%" }}>
                   <CustomButton
                     title={"Skip"}
-                    onPressHandler={() => { }}
+                    onPressHandler={handleReject}
                   ></CustomButton>
                 </View>
 
@@ -94,17 +125,13 @@ const ConsumerCard = ({confirmAccept, id, map, name, distance, carType, consumer
                 ></CustomButton>
               </View>
             )}
-
-
-
-
           </View>
           {/* <Button title="Get Location" onPress={handleLink}></Button> */}
         </Card.Actions>
       </Card>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   cardContainer: {

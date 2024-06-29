@@ -7,7 +7,7 @@ const { height } = Dimensions.get("window");
 const Splashscreen = ({ navigation }) => {
   useEffect(() => {
     const getCurrentUser = async () => {
-      // AsyncStorage.clear();
+      AsyncStorage.clear();
 
       const userId = await AsyncStorage.getItem("userId");
       const userType = await AsyncStorage.getItem("userRole");

@@ -67,7 +67,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
     // Alert.alert("Successful", JSON.stringify(data));
 
     if (photos.length < 4) return;
-    Alert.alert("Successful", "" + photos.length);
+    // Alert.alert("Successful", "" + photos.length);
 
     await axios
       // .post("https://gp-backend-8p08.onrender.com/api/serviceProvider/", data)
@@ -77,7 +77,7 @@ const ProviderRegisterScreen = ({ navigation }) => {
         if (res.status === 200) {
           AsyncStorage.setItem("userId", res.data._id);
           AsyncStorage.setItem("userRole", "provider");
-          navigation.navigate("ProviderHomeScreen");
+          navigation.navigate("ProviderHomeScreen", { name: res.data.name });
           try {
             photos.forEach(async (photo) => {
               let imageUri = Object.values(photo)[0];

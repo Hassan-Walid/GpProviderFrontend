@@ -45,7 +45,7 @@ const ConsumerLoginScreen = ({ navigation }) => {
           let foundUser = res.data;
           await AsyncStorage.setItem("userId", foundUser._id);
           await AsyncStorage.setItem("userRole", "provider");
-          navigation.navigate("ProviderHomeScreen");
+          navigation.navigate("ProviderHomeScreen", { name: foundUser.name });
         })
         .catch((err) => {
           console.log(err);

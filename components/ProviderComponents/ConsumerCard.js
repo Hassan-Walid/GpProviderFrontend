@@ -18,6 +18,7 @@ const ConsumerCard = ({
   setIsRequestAccepted,
   setRequestInfo,
   setPendingRequests,
+  serviceType,
 }) => {
   let [showNavigateButton, setShowNavigateButton] = React.useState(false);
 
@@ -51,7 +52,7 @@ const ConsumerCard = ({
     const url = `https://www.google.com/maps/dir/?api=1&destination=${consumerLocation.latitude},${consumerLocation.longitude}`;
     Linking.openURL(url);
   };
-
+  console.log("mappp", map);
   let focusOnMarker = () => {
     let latitude = +consumerLocation["latitude"];
     let longitude = +consumerLocation["longitude"];
@@ -83,6 +84,27 @@ const ConsumerCard = ({
               <Text variant="bodyMedium" style={styles.carType}>
                 {carType}
               </Text>
+              <View style={{ flexDirection: "row" }}>
+                {serviceType ? (
+                  serviceType.map((s, i) => {
+                    return (
+                      <Text variant="bodyMedium" style={styles.carType}>
+                        {s}
+                        {serviceType.length - 1 == i ? " " : ","}
+                      </Text>
+                    );
+                  })
+                ) : (
+                  <Text variant="bodyMedium" style={styles.carType}>
+                    Winch
+                  </Text>
+                )}
+              </View>
+
+              {/* <Text variant="bodyMedium" style={styles.carType}>
+                {serviceType}
+                {console.log("ser_type", serviceType)}
+              </Text> */}
 
               {targetLocation && (
                 <Text variant="bodyMedium" style={styles.carType}>

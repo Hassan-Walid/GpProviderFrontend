@@ -2,12 +2,14 @@ import React, { useEffect } from "react";
 import { StyleSheet, View, Dimensions, Text } from "react-native";
 import LottieView from "lottie-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { url } from "@/constants/url";
 const { height } = Dimensions.get("window");
 
 const Splashscreen = ({ navigation }) => {
   useEffect(() => {
     const getCurrentUser = async () => {
-      AsyncStorage.clear();
+      // AsyncStorage.clear();
 
       const userId = await AsyncStorage.getItem("userId");
       const userType = await AsyncStorage.getItem("userRole");
@@ -20,8 +22,16 @@ const Splashscreen = ({ navigation }) => {
         }, 5000);
 
         return () => clearTimeout(timer);
-      } else if (userId && userType == "provider" && navigation)
-        navigation.navigate("ProviderHomeScreen");
+      } else if (userId && userType == "provider" && navigation) {
+        let nameProvider;
+        axios.get(`${url}/api/serviceProvider/${userId}`).then((res) => {
+          console.log("ress", res.data.sProvider.name);
+          nameProvider = res.data.sProvider.name;
+          navigation.navigate("ProviderHomeScreen", {
+            name: res.data.sProvider.name,
+          });
+        });
+      }
     };
     getCurrentUser();
   }, [navigation]);

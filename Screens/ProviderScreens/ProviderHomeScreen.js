@@ -8,18 +8,24 @@ import {
   View,
   Linking,
   ScrollView,
+  ImageBackground,
+  Image,
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import ConsumerCard from "../../components/ProviderComponents/ConsumerCard";
 import SwitchStatus from "./../../components/ProviderComponents/SwitchStatus";
-import { ProgressBar } from "react-native-paper";
+import { IconButton, ProgressBar } from "react-native-paper";
 import io, { Socket } from "socket.io-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { url } from "@/constants/url";
+import LoadingScreen from "../SplashScreens/loadingScreen";
+import CustomButton from "@/components/CustomButton";
+import Icon from "react-native-vector-icons/Ionicons";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
-const ProviderHomeScreen = ({}) => {
+const ProviderHomeScreen = ({ navigation, route }) => {
   const [approvalStatus, setApprovalStatus] = useState();
   const [mapRegion, setMapRegion] = useState({
     latitude: 37.78825,
@@ -65,6 +71,7 @@ const ProviderHomeScreen = ({}) => {
       }
     };
   }, []);
+  // console.log(route.params);
 
   useEffect(() => {
     if (id) {
@@ -171,14 +178,16 @@ const ProviderHomeScreen = ({}) => {
 
       newsocket.on(
         "IncomingRequest",
-        async ({ consumerId, consumerLocation, distance }) => {
+        async ({ consumerId, consumerLocation, distance, serviceType }) => {
           console.log(
             "Incoming Request from " +
               consumerId +
               " at lat: " +
               consumerLocation +
               " distance: " +
-              distance
+              distance +
+              " serviceType: " +
+              serviceType
           );
 
           let incomingUser = await axios
@@ -192,7 +201,13 @@ const ProviderHomeScreen = ({}) => {
 
           setPendingRequests((allRequests) => [
             ...allRequests,
-            { consumerId, consumerLocation, distance, incomingUser },
+            {
+              consumerId,
+              consumerLocation,
+              distance,
+              incomingUser,
+              serviceType,
+            },
           ]);
         }
       );
@@ -293,17 +308,43 @@ const ProviderHomeScreen = ({}) => {
     // console.log(requestInfo);
     setRequestInfo({});
   };
-  // const origin = { latitude: 37.78825, longitude: -122.4324 };
-  // const destination = { latitude: 40.79855, longitude: -100.4324 };
-  // const region = {
-  //   latitude: 37.78825,
-  //   longitude: -122.4324,
-  //   latitudeDelta: 0.0922,
-  //   longitudeDelta: 0.0421,
-  // };
 
   return (
     <>
+      <View style={styles.homeHeader}>
+        <Text style={styles.text}>Hello, {route.params.name}</Text>
+
+        <View style={{ flexDirection: "row" }}>
+          <IconButton
+            icon="earth"
+            iconColor={"white"}
+            size={30}
+            onPress={() => {
+              if (i18n.language === "en") {
+                i18n.changeLanguage("ar");
+              } else {
+                i18n.changeLanguage("en");
+              }
+            }}
+          />
+
+          <IconButton
+            icon="logout"
+            iconColor={"white"}
+            size={30}
+            onPress={async () => {
+              await AsyncStorage.clear();
+              navigation.navigate("LoginScreen");
+            }}
+          />
+        </View>
+
+        {/* <Image
+          style={styles.profilePicture}
+          source={require("../../assets/images/person.jpg")}
+        /> */}
+      </View>
+
       {approvalStatus == "pending" && (
         <View style={styles.approvalContainer}>
           <Text style={styles.approvalText}>
@@ -351,11 +392,7 @@ const ProviderHomeScreen = ({}) => {
                   key={i}
                   coordinate={{ latitude: lat, longitude: long }}
                   title={r["incomingUser"]["name"].toUpperCase()}
-                >
-                  {/* <View
-                    style={[styles.customMarker, styles.originMarker]}
-                  ></View> */}
-                </Marker>
+                ></Marker>
                 {r["targetLocation"] && (
                   <Marker
                     coordinate={{ latitude: latTarget, longitude: longTarget }}
@@ -381,13 +418,72 @@ const ProviderHomeScreen = ({}) => {
         pendingRequests.length === 0 &&
         !startPickUp &&
         !endProcess ? (
-          <Text>Waiting For Requests...</Text>
+          <View style={{ marginTop: 5, flex: 1 }}>
+            <Text
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: 20,
+                margin: 3,
+                fontStyle: "italic",
+                color: "#3D3B3B",
+              }}
+            >
+              Waiting For Requests...
+            </Text>
+            <LoadingScreen></LoadingScreen>
+          </View>
         ) : (
-          !endProcess && !isSwitchOn && <Text>Not Available For Request</Text>
+          !endProcess &&
+          !isSwitchOn && (
+            <ImageBackground
+              style={{
+                flex: 1,
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              source={require("../../assets/images/100.jpg")}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  margin: 8,
+                  fontStyle: "italic",
+                  color: "rgba(151,151,151,255)",
+                  position: "absolute",
+                  top: "75%",
+                }}
+              >
+                Enable Available To Receive Requests
+              </Text>
+            </ImageBackground>
+          )
         )}
 
         {isSwitchOn && endProcess && (
-          <Button title="End Process" onPress={handleEndProcess}></Button>
+          // <Button title="End Process" onPress={handleEndProcess}></Button>
+          <View style={styles.alertBox}>
+            <View style={styles.iconContainer}>
+              <Icon name="checkmark" size={30} color="#fff" />
+            </View>
+            <Text style={styles.alertTitle}>Congratulations</Text>
+            <Text style={styles.alertMessage}>
+              You finished service successfully
+            </Text>
+            <View
+              style={{
+                width: "60%",
+              }}
+            >
+              <CustomButton
+                title={"End Service"}
+                onPressHandler={handleEndProcess}
+              ></CustomButton>
+            </View>
+          </View>
         )}
 
         {!startPickUp && pendingRequests.length > 0 ? (
@@ -403,6 +499,7 @@ const ProviderHomeScreen = ({}) => {
                       consumerId={r["consumerId"]}
                       consumerLocation={r["consumerLocation"]}
                       name={r["incomingUser"]["name"].toUpperCase()}
+                      serviceType={r.serviceType}
                       carType={
                         r["incomingUser"]["owned_cars"][0][
                           "make"
@@ -429,13 +526,97 @@ const ProviderHomeScreen = ({}) => {
           <Text></Text>
         )}
 
-        {startPickUp && <Text>In PackUp Process</Text>}
+        {startPickUp && (
+          <ImageBackground
+            style={{
+              flex: 1,
+              width: "100%",
+              marginTop: -15,
+              // justifyContent: "center",
+              alignItems: "center",
+            }}
+            source={require("../../assets/images/pickup.jpg")}
+          >
+            <Text
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+
+                fontSize: 25,
+                margin: 8,
+                fontStyle: "italic",
+                color: "rgba(151,151,151,255)",
+                position: "absolute",
+                top: 50,
+              }}
+            >
+              In Pickup Process
+            </Text>
+          </ImageBackground>
+        )}
       </View>
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  alertBox: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "rgb(251, 245, 247)",
+    borderRadius: 10,
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#9AB3CA",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  alertTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  alertMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  doneButton: {
+    width: "100%",
+    padding: 10,
+    backgroundColor: "#9AB3CA",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  doneButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  homeHeader: {
+    height: 100,
+    width: "100%",
+    flexDirection: "row",
+    backgroundColor: "#9AB3CA",
+    borderBottomRightRadius: 50,
+    justifyContent: "space-between",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  text: {
+    margin: 8,
+    color: "white",
+    fontSize: 20,
+    fontFamily: "Oswald",
+  },
   approvalText: {
     textAlign: "center",
     color: "white",
@@ -446,6 +627,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // justifyContent: "space-around",
     alignItems: "center",
+    backgroundColor: "rgb(251, 245, 247)",
   },
   map: {
     width: "100%",
@@ -454,7 +636,7 @@ const styles = StyleSheet.create({
   consumersList: {
     flex: 1,
     width: "100%",
-    marginTop: 10,
+    // marginTop: 10,
     // position: "absolute",
   },
   listContentContainer: {
